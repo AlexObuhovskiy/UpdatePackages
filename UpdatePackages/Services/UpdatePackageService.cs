@@ -4,12 +4,19 @@ using System.IO;
 using System.Linq;
 using System.Text;
 
-namespace UpdatePackages
+namespace UpdatePackages.Services
 {
     public class UpdatePackageService
     {
         private const string CsprojExtensionStr = ".csproj";
         private const string Version = "Version=\"";
+        private const string PackageReference = "PackageReference Include=\"";
+        private readonly IFileService _fileService;
+
+        public UpdatePackageService(IFileService fileService)
+        {
+            _fileService = fileService;
+        }
 
         public void UpdatePackage(
             string backEndSolutionPath,
@@ -51,14 +58,14 @@ namespace UpdatePackages
             }
         }
 
-        private static void UpdatePackageForProject(
+        private void UpdatePackageForProject(
             string projectPath,
             string packageName,
             string newPackageVersion)
         {
-            var projectContent = GetFileContent(projectPath);
+            var projectContent = _fileService.GetFileContent(projectPath);
             var packageNameIndex = projectContent
-                .IndexOf(packageName, StringComparison.InvariantCultureIgnoreCase);
+                .IndexOf($"{PackageReference}{packageName}\"", StringComparison.InvariantCultureIgnoreCase);
 
             if (packageNameIndex == -1)
             {
@@ -83,20 +90,11 @@ namespace UpdatePackages
                 doubleQuotesClosingVersionIndex,
                 projectContent.Length - doubleQuotesClosingVersionIndex));
 
-            WriteToFile(projectPath, sb.ToString());
-        }
+            var encoding = _fileService.GetFileEncoding(projectPath);
+            _fileService.WriteToFile(projectPath, sb.ToString(), encoding);
 
-        private static string GetFileContent(string filePath)
-        {
-            using var reader = new StreamReader(filePath);
-            return reader.ReadToEnd();
-        }
-
-        private static void WriteToFile(string filePath, string content)
-        {
-            using var writer = new StreamWriter(filePath, false, Encoding.UTF8);
-            writer.Write(content);
-            writer.Close();
+            Console.WriteLine($"{projectPath.Split("\\").Last()}: package {packageName} " +
+                $"was updated with version '{newPackageVersion}'.");
         }
     }
 }
