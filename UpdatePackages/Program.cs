@@ -1,4 +1,5 @@
-﻿using UpdatePackages.Services;
+﻿using System.Collections.Generic;
+using UpdatePackages.Services;
 
 namespace UpdatePackages
 {
@@ -12,18 +13,28 @@ namespace UpdatePackages
         /// <summary>
         /// Change solution, which you want to update
         /// </summary>
-        private const string SolutionToUpdate = SolutionNameConstants.SharedServices;
+        private const string SolutionToUpdate = Constants.SolutionNames.SharedServices;
 
         /// <summary>
         /// Change package name, which you want to update 
         /// </summary>
-        private const string PackageName = PackageNameConstants.SmcServiceCore;
+        private const string PackageName = Constants.PackageNames.ShipManagerConnectCore;
+
+        /// <summary>
+        /// Select project names you want to ignore
+        /// </summary>
+        private static readonly List<string> ProjectsToIgnore = new List<string>
+        { 
+            "ShipManager.Vessel"
+        };
 
         /// <summary>
         /// Change package version
         /// </summary>
-        private const string NewPackageVersion = "1.20.0";
+        private const string NewPackageVersion = "2.33.0";
 
+
+        // `dotnet pack`
         static void Main()
         {
             var updatePackageService = new UpdatePackageService(new FileService());
@@ -31,7 +42,8 @@ namespace UpdatePackages
                 BackEndSolutionPath,
                 SolutionToUpdate,
                 PackageName,
-                NewPackageVersion);
+                NewPackageVersion,
+                ProjectsToIgnore);
         }
     }
 }

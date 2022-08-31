@@ -11,6 +11,7 @@ namespace UpdatePackages.Services
         private const string CsprojExtensionStr = ".csproj";
         private const string Version = "Version=\"";
         private const string PackageReference = "PackageReference Include=\"";
+
         private readonly IFileService _fileService;
 
         public UpdatePackageService(IFileService fileService)
@@ -22,11 +23,10 @@ namespace UpdatePackages.Services
             string backEndSolutionPath,
             string solutionToUpdate,
             string packageName,
-            string newPackageVersion)
+            string newPackageVersion,
+            List<string> projectsToIgnore)
         {
-            var solutionFolderPath = Path.Combine(
-                backEndSolutionPath,
-                solutionToUpdate);
+            var solutionFolderPath = Path.Combine(backEndSolutionPath, solutionToUpdate);
 
             if (!Directory.Exists(solutionFolderPath))
             {
@@ -36,6 +36,14 @@ namespace UpdatePackages.Services
 
             var projectPathList = new List<string>();
             FindProjectPathsInFolder(solutionFolderPath, projectPathList);
+
+            projectPathList = projectPathList
+                .Where(projectPath =>
+                    !projectsToIgnore.Any(ignore =>
+                        projectPath.Contains(
+                            ignore,
+                            StringComparison.InvariantCultureIgnoreCase)))
+                .ToList();
 
             foreach (var projectPath in projectPathList)
             {
